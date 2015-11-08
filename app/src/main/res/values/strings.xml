@@ -2,10 +2,23 @@
     <string name="app_name">Sesión 4: Ficheros</string>
 
     <string name="botónAñadir">Añadir</string>
+    <string name="botónActualizar">Actualizar</string>
     <string name="opcionVaciar">Vaciar Fichero</string>
     <string name="hintTexto">Texto a añadir</string>
     <string name="txtOnStart">Pulsa para mostrar el contenido del fichero</string>
     <string name="txtFicheroVacio">El fichero está vacío</string>
     <string name="txtErrorEscribir">No puedo escribir en la memoria externa</string>
+    <string name="preferencias">preferencias</string>
+    <string name="title_activity_configuracion">Configuracion</string>
+    <string name="SD_title">Almacenamiento en tarjeta SD</string>
+    <string name="SD_summary">Si se activa esta opción se almacenará la información en la tarjeta SD (si está disponible)</string>
+    <string name="Fichero_title">Nombre de fichero</string>
+    <string name="Fichero_summary">Nombre de fichero en el que se guardará la información</string>
+    <string name="sd">sd</string>
+    <string name="memintern">memintern</string>
+    <string name="borrar">Eliminar ficheros</string>
+
+
+
 
 </resources>

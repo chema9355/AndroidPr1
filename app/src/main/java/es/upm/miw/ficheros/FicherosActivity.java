@@ -1,8 +1,13 @@
 package es.upm.miw.ficheros;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.internal.view.menu.MenuBuilder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,18 +19,21 @@ import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 
 public class FicherosActivity extends AppCompatActivity {
 
-    private final String NOMBRE_FICHERO = "miFichero.txt";
+    private String NOMBRE_FICHERO = "miFichero.txt";
     private String RUTA_FICHERO;         /** SD card **/
     EditText lineaTexto;
     Button botonAniadir;
     TextView contenidoFichero;
-
-
+    TextView estado;
+    boolean sd;
+    private static final int MENUITEM = Menu.FIRST;
     @Override
     protected void onStart() {
         super.onStart();
@@ -34,32 +42,28 @@ public class FicherosActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ficheros);
 
         lineaTexto       = (EditText) findViewById(R.id.textoIntroducido);
         botonAniadir     = (Button)   findViewById(R.id.botonAniadir);
         contenidoFichero = (TextView) findViewById(R.id.contenidoFichero);
-
-        /** SD card **/
-        // RUTA_FICHERO = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + NOMBRE_FICHERO;
         RUTA_FICHERO = getExternalFilesDir(null) + "/" + NOMBRE_FICHERO;
+        estado = new TextView(this);
+
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        sd = pref.getBoolean("SD", true);
+        NOMBRE_FICHERO = pref.getString("Fichero", "");
+        mostrarContenido(contenidoFichero);
 
     }
 
-    /**
-     * Al pulsar el botón añadir -> añadir al fichero.
-     * Después de añadir -> mostrarContenido()
-     *
-     * @param v Botón añadir
-     */
-    public void accionAniadir(View v) {
-        /** Comprobar estado SD card **/
+         public void accionAniadir(View v) {
+
+        if(sd){
         String estadoTarjetaSD = Environment.getExternalStorageState();
-        try {  // Añadir al fichero
-            if (estadoTarjetaSD.equals(Environment.MEDIA_MOUNTED)) {  /** SD card **/
-                // FileOutputStream fos = openFileOutput(NOMBRE_FICHERO, Context.MODE_APPEND);
+        try {
+            if (estadoTarjetaSD.equals(Environment.MEDIA_MOUNTED)) {
                 FileOutputStream fos = new FileOutputStream(RUTA_FICHERO, true);
                 fos.write(lineaTexto.getText().toString().getBytes());
                 fos.write('\n');
@@ -70,26 +74,34 @@ public class FicherosActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e("FILE I/O", "ERROR: " + e.getMessage());
             e.printStackTrace();
+        }}
+        else
+        {
+            try {
+                FileOutputStream fos = openFileOutput(NOMBRE_FICHERO, Context.MODE_APPEND);
+                fos.write(lineaTexto.getText().toString().getBytes());
+                fos.write('\n');
+                fos.close();
+                mostrarContenido(contenidoFichero);
+                Log.i("FICHERO", "Click botón Añadir -> AÑADIR al fichero");
+            } catch (Exception e) {
+                Log.e("FILE I/O", "ERROR: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
 
-    }
+  }
 
-    /**
-     * Se pulsa sobre el textview -> mostrar contenido del fichero
-     * Si está vacío -> mostrar un Toast
-     *
-     * @param textviewContenidoFichero TextView contenido del fichero
-     */
     public void mostrarContenido(View textviewContenidoFichero) {
         boolean hayContenido = false;
+        if(sd)
+        {
         File fichero = new File(RUTA_FICHERO);
         String estadoTarjetaSD = Environment.getExternalStorageState();
         contenidoFichero.setText("");
         try {
-            if (fichero.exists() &&         /** SD card **/
+            if (fichero.exists() &&
                     estadoTarjetaSD.equals(Environment.MEDIA_MOUNTED)) {
-                // BufferedReader fin =
-                //        new BufferedReader(new InputStreamReader(openFileInput(NOMBRE_FICHERO)));
                 BufferedReader fin = new BufferedReader(new FileReader(new File(RUTA_FICHERO)));
                 String linea = fin.readLine();
                 while (linea != null) {
@@ -104,26 +116,49 @@ public class FicherosActivity extends AppCompatActivity {
             Log.e("FILE I/O", "ERROR: " + e.getMessage());
             e.printStackTrace();
         }
+
+        }
+    else {
+            try {
+                BufferedReader fin =
+                        new BufferedReader(new InputStreamReader(openFileInput(NOMBRE_FICHERO)));
+                contenidoFichero.setText("");
+                String linea = fin.readLine();
+                while (linea != null) {
+                    hayContenido = true;
+                    contenidoFichero.append(linea + '\n');
+                    linea = fin.readLine();
+                }
+                fin.close();
+                Log.i("FICHERO", "Click contenido Fichero -> MOSTRAR fichero");
+            } catch (Exception e) {
+                Log.e("FILE I/O", "ERROR: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+        }
+
         if (!hayContenido) {
             Toast.makeText(this, getString(R.string.txtFicheroVacio), Toast.LENGTH_SHORT).show();
         }
+     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.clear();
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
     }
 
     @Override
-    /**
-     * Añade el menú con la opcion de vaciar el fichero
-     */
-    public boolean onCreateOptionsMenu(Menu menu) {
-        super.onCreateOptionsMenu(menu);
-
-        //menu.add(Menu.NONE, 1, Menu.NONE, R.string.opcionVaciar)
-        //        .setIcon(android.R.drawable.ic_menu_delete); // sólo visible android < 3.0
-
-        // Inflador del menú: añade elementos a la action bar
-        getMenuInflater().inflate(R.menu.menu, menu);
-
-        return true;
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        menu.findItem(R.id.sd).setVisible(sd);
+        menu.findItem(R.id.fichero).setVisible(!sd);
+        return super.onPrepareOptionsMenu(menu);
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -132,30 +167,82 @@ public class FicherosActivity extends AppCompatActivity {
             case R.id.accionVaciar:
                 borrarContenido();
                 break;
+            case R.id.preferencias:
+                Intent nuevoIntent = new Intent(FicherosActivity.this,Configuracion.class);
+                startActivity(nuevoIntent);
+            case R.id.borrar:
+                eliminarFicheros();
+                break;
         }
-
         return true;
     }
 
-    /**
-     * Vaciar el contenido del fichero, la línea de edición y actualizar
-     *
-     */
     public void borrarContenido() {
-        String estadoTarjetaSD = Environment.getExternalStorageState();
-        try {  // Vaciar el fichero
-            if (estadoTarjetaSD.equals(Environment.MEDIA_MOUNTED)) { /** SD card **/
-                // FileOutputStream fos = openFileOutput(NOMBRE_FICHERO, Context.MODE_PRIVATE);
-                FileOutputStream fos = new FileOutputStream(RUTA_FICHERO);
+        if(sd) {
+
+            String estadoTarjetaSD = Environment.getExternalStorageState();
+            try {
+                if (estadoTarjetaSD.equals(Environment.MEDIA_MOUNTED)) { /** SD card **/
+                    // FileOutputStream fos = openFileOutput(NOMBRE_FICHERO, Context.MODE_PRIVATE);
+                    FileOutputStream fos = new FileOutputStream(RUTA_FICHERO);
+                    fos.close();
+                    Log.i("FICHERO", "opción Limpiar -> VACIAR el fichero");
+                    lineaTexto.setText(""); // limpio la linea de edición
+                    mostrarContenido(contenidoFichero);
+                }
+            } catch (Exception e) {
+                Log.e("FILE I/O", "ERROR: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        else {
+            try {
+                FileOutputStream fos = openFileOutput(NOMBRE_FICHERO, Context.MODE_PRIVATE);
                 fos.close();
                 Log.i("FICHERO", "opción Limpiar -> VACIAR el fichero");
                 lineaTexto.setText(""); // limpio la linea de edición
                 mostrarContenido(contenidoFichero);
+            } catch (Exception e) {
+                Log.e("FILE I/O", "ERROR: " + e.getMessage());
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            Log.e("FILE I/O", "ERROR: " + e.getMessage());
-            e.printStackTrace();
         }
+
+        }
+
+    public void eliminarFicheros(){
+        String path;
+        if(sd){
+            path = getExternalFilesDir(null)+"";
+        }
+        else{
+            path = "/data/data/es.upm.miw.ficheros/files";
+        }
+
+        File[] archivos = new File(path).listFiles(new FileFilter() {
+            public boolean accept(File archivo) {
+                if (archivo.isFile())
+                return archivo.getName().endsWith('.' + "txt");
+                return false;
+            }
+        });
+        for (File archivo : archivos)
+        archivo.delete();
+
+
+        if(sd){
+        Toast.makeText(this,"Fichero eliminados de la tarjeta sd", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            Toast.makeText(this,"Fichero eliminados de la memoria interna", Toast.LENGTH_SHORT).show();
+
+        }
+
+        contenidoFichero.setText("");
+
     }
+
+
 
 }

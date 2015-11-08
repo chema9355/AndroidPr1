@@ -14,4 +14,34 @@
         app:showAsAction="ifRoom|withText"
         />
 
+    <item
+        android:id="@+id/sd"
+        android:title="@string/sd"
+        android:orderInCategory="100"
+        app:showAsAction="ifRoom|withText"
+        android:icon="@drawable/sd"
+        />
+
+    <item
+        android:id="@+id/fichero"
+        android:title="@string/memintern"
+        android:orderInCategory="100"
+        app:showAsAction="ifRoom|withText"
+        android:icon="@drawable/meminterna"
+        />
+
+    <item
+        android:id="@+id/preferencias"
+        android:title="@string/title_activity_configuracion"
+        android:orderInCategory="100"
+        app:showAsAction="ifRoom|withText"
+        />
+
+    <item
+        android:id="@+id/borrar"
+        android:title="@string/borrar"
+        android:orderInCategory="100"
+        app:showAsAction="ifRoom|withText"
+        />
+
 </menu>
